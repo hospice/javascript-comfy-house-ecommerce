@@ -12,17 +12,20 @@ const productsDOM = document.querySelector(".products-center");
 
 //cart
 let cart = [];
+
+//buttons
+let buttonsDOM = [];
 //getting the products
 class Products{
 
-    async getproducts(){
+    async getProducts(){
         try{
-            let result= await fetch('products.json')
+            let result = await fetch('products.json')
             let data = await result.json();
             let products = data.items;
             products = products.map(item =>{
                 const {title, price} = item.fields;
-                const id  = item.sys;
+                const {id}  = item.sys;
                 const image = item.fields.image.fields.file.url;
                 return {title,price,id,image};
             })
@@ -59,28 +62,47 @@ class UI{
     }
     getBagButtons(){
         const buttons = [...document.querySelectorAll(".bag-btn")];
+        
+        const buttonsDOM = buttons;
         buttons.forEach(button =>{
             let id = button.dataset.id;
+
+           // console.log(Storage.etProduct(3));
             let inCart = cart.find(iten => item.id === id);
             if(inCart){
                 button.innerHTML = "In Cart";
                 button.disabled = true;
             }else{
                 button.addEventListener('click',(event)=>{
-                    console.log(event);
                     event.target.innerText = "In Cart";
                     event.target.disabled = true;
-                    //get product from products 
+                    //get product from products
+                    let cartItem = {...Storage.getProduct(id), amount:1};
                     // add product to the cart
-                    //save casr in local storage
+                    cart = [...cart, cartItem];
+                    //save cart in local storage
+                    Storage.saveCart(cart);
                     //set cart value
+                    this.setCartValues(cart);
                     //display cart item
                     //show the cart
-                })
+                });
             }
             //console.log(id);
 
         });
+       
+    }
+    setCartValues(cart){
+        let tempTotal = 0;
+        let itemsTotal = 0;
+        cart.map(item =>{
+            itemsTotal += item.amount * item.amount;
+            itemsTotal+= item.amount;
+        });
+        cartTotal.innerText = parseFloat(tempTotal.toFixed(2));
+        cartItems.innerText = itemsTotal;
+        console.log(cartItems);
     }
 }
 class Storage{
@@ -89,9 +111,13 @@ class Storage{
     }
     static getProduct(id){
         let products = JSON.parse(localStorage.getItem('products'));
-        return products.find(product => product.id === id);
+        //console.log(products[5].id);
+        //products.forEach(product => {console.log(product)});
+        return products.find(item => item.id === id);
     }
-
+    static saveCart(cart){
+        localStorage.setItem("cart", JSON.stringify(cart));
+    }
 }
 //local storage
 
@@ -102,7 +128,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
     //get all products
     //products.getproducts().then(data => console.log(data));
-    products.getproducts().then(products => {
+    products.getProducts().then(products => {
         ui.displayProducts(products);
         Storage.saveProducts(products);
     }).then(()=>{
